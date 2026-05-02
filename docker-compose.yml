@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # 小说写作智能体应用服务
+  novel-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: novel-agent-app
+    ports:
+      - "8080:8080"
+    environment:
+      # Spring 配置
+      - SPRING_PROFILES_ACTIVE=docker
+      
+      # 数据库连接（使用容器内网络）
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/novel_agent
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres123
+      
+      # 阿里云 DashScope API Key（必须设置）
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY:}
+      
+      # JVM 内存配置
+      - JAVA_OPTS=-Xms512m -Xmx1024m
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - novel-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # PostgreSQL 数据库（带 PGVector 支持）
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: novel-agent-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres123
+      - POSTGRES_DB=novel_agent
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - novel-network
+    restart: unless-stopped
+
+# 数据持久化
+volumes:
+  postgres_data:
+    driver: local
+
+# 网络配置
+networks:
+  novel-network:
+    driver: bridge

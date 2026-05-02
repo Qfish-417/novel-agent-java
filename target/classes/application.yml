@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: novel-agent-java
+  ai:
+    dashscope:
+      api-key: ${DASHSCOPE_API_KEY:your-api-key}
+      chat:
+        options:
+          model: qwen-plus
+          timeout: 120000
+  datasource:
+    url: jdbc:postgresql://localhost:5432/noveldb
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+server:
+  port: 8080
+
+novel:
+  output:
+    base-path: ./output/novel
+  agent:
+    max-steps: 10
+    timeout-ms: 120000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,circuitbreakers,circuitbreakerevents
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+
+logging:
+  level:
+    com.example.novelagent: DEBUG
+    org.springframework.ai: DEBUG

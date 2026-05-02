@@ -1,0 +1,48 @@
+# Docker 环境配置
+spring:
+  profiles:
+    active: docker
+  application:
+    name: novel-agent-java
+
+  # 数据源配置（Docker Compose）
+  datasource:
+    url: jdbc:postgresql://postgres:5432/novel_agent
+    username: postgres
+    password: postgres123
+    driver-class-name: org.postgresql.Driver
+
+  # AI 配置
+  ai:
+    dashscope:
+      base-url: https://dashscope.aliyuncs.com/api/v1
+      api-key: ${SPRING_AI_DASHSCOPE-API-KEY:${DASHSCOPE_API_KEY:}}
+      chat:
+        options:
+          model: qwen-plus
+          temperature: 0.8
+          max-tokens: 8192
+          timeout: 120000
+
+# 服务配置
+server:
+  port: 8080
+
+# Actuator 监控端点
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,circuitbreakers,metrics
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+
+# 日志配置
+logging:
+  level:
+    com.example.novelagent: INFO
+    org.springframework.ai: DEBUG
